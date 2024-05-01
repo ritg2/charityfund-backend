@@ -10,6 +10,8 @@ connectDb();
 app.use(express.json());
 app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/campaign", require("./routes/campaignRoutes"));
+app.use("/api/comment", require("./routes/commentRoutes"));
+app.use("/api/donation", require("./routes/donationRoutes"));
 app.use(errorHandler);
 
 const port = process.env.PORT || 5000;

@@ -10,6 +10,7 @@ const createCampaign = asyncHandler(async (req, res) => {
   }
 
   const campaign = await Campaign.create({
+    user_id: req.user._id,
     title,
     description,
     goalAmount,
@@ -43,6 +44,11 @@ const updateCampaign = asyncHandler(async (req, res) => {
     throw new Error("campaign not found");
   }
 
+  if (campaign.user_id.toString() !== req.user._id) {
+    res.status(401);
+    throw new Error("User don't have permission to update other user Campaign");
+  }
+
   const updatedCampaign = await Campaign.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -56,8 +62,14 @@ const updateCampaign = asyncHandler(async (req, res) => {
 const deleteCampaign = asyncHandler(async (req, res) => {
   const campaign = await Campaign.findById(req.params.id);
   if (!campaign) {
+    console.log(campaign.user_id.toString() !== req.user._id)
     res.status(404);
     throw new Error("campaign not found");
+  }
+
+  if (campaign.user_id.toString() !== req.user._id) {  
+    res.status(401);
+    throw new Error("User don't have permission to update other user Campaign");
   }
 
   await Campaign.deleteOne({ _id: req.params.id });
