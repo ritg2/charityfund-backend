@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Comment = require("../models/commentModel");
 
 const createComment = asyncHandler(async (req, res) => {
-  const { text } = req.body;
+  const { text, campaignId } = req.body;
   if (!text) {
     res.status(400);
     throw new Error("No comment");
@@ -10,14 +10,15 @@ const createComment = asyncHandler(async (req, res) => {
   const comment = await Comment.create({
     text,
     user_id: req.user._id,
-    compaign_id: "",
+    compaign_id: campaignId,
   });
 
   res.status(201).json(comment);
 });
 
 const getAllComments = asyncHandler(async (req, res) => {
-  const comments = await Comment.find();
+  const { campaignId } = req.body;
+  const comments = await Comment.find({campaign_id: campaignId});
   res.status(201).json(comments);
 });
 
