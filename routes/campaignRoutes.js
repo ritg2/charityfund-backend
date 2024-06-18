@@ -8,10 +8,11 @@ const {
   getCampaign,
 } = require("../controllers/campaignController");
 const validateToken = require("../middleware/validateToken");
+const upload = require("../middleware/multer");
 
 const router = express.Router();
 
-router.route("/").get(getAllCampaigns).post(validateToken, createCampaign);
+router.route("/").get(getAllCampaigns).post(validateToken,upload.single("image"),createCampaign);
 
 router
   .route("/:id")

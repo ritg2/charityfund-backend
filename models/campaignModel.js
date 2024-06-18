@@ -5,7 +5,12 @@ const campaignSchema = mongoose.Schema(
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "User"
+      ref: "User",
+    },
+    image: {
+      type: String,
+      default:
+        "https://res.cloudinary.com/dzr31apfk/image/upload/v1717608010/zqef8awx7nkoz4qzto19.jpg",
     },
     title: {
       type: String,

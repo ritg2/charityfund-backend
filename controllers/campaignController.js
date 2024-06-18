@@ -1,9 +1,16 @@
 const asyncHandler = require("express-async-handler");
 const Campaign = require("../models/campaignModel");
+const cloudinary = require("../utils/cloudinary");
 
 //private
 const createCampaign = asyncHandler(async (req, res) => {
-  const { title, description, goalAmount, endDate } = req.body;
+  const result = await cloudinary.uploader.upload(req.file.path);
+  if (!result) {
+    res.status(400);
+    throw new Error("Failed to upload image.");
+  }
+
+  const { title, description, goalAmount, endDate, startDate } = req.body;
   if (!title || !description || !goalAmount || !endDate) {
     res.status(400);
     throw new Error("All fields are required");
@@ -15,14 +22,37 @@ const createCampaign = asyncHandler(async (req, res) => {
     description,
     goalAmount,
     endDate,
+    startDate,
+    image: result.secure_url,
   });
+
   res.status(201).json(campaign);
 });
 
 //public
 const getAllCampaigns = asyncHandler(async (req, res) => {
-  const campaign = await Campaign.find();
-  res.status(201).json(campaign);
+  const { search, page = 1, limit = 10 } = req.query;
+
+  const queryObject = {};
+
+  if (search) {
+    queryObject.title = { $regex: search, $options: "i" };
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  let result = Campaign.find(queryObject).skip(skip).limit(Number(limit));
+
+  const campaign = await result;
+  const totalCampaigns = await Campaign.countDocuments(queryObject);
+  const numOfpages = Math.ceil(totalCampaigns / Number(limit));
+
+  res.status(201).json({
+    campaign,
+    totalCampaigns,
+    numOfpages,
+    currentPage: Number(page),
+  });
 });
 
 //public
@@ -62,12 +92,12 @@ const updateCampaign = asyncHandler(async (req, res) => {
 const deleteCampaign = asyncHandler(async (req, res) => {
   const campaign = await Campaign.findById(req.params.id);
   if (!campaign) {
-    console.log(campaign.user_id.toString() !== req.user._id)
+    console.log(campaign.user_id.toString() !== req.user._id);
     res.status(404);
     throw new Error("campaign not found");
   }
 
-  if (campaign.user_id.toString() !== req.user._id) {  
+  if (campaign.user_id.toString() !== req.user._id) {
     res.status(401);
     throw new Error("User don't have permission to update other user Campaign");
   }
