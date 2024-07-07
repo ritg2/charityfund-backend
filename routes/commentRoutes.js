@@ -3,17 +3,20 @@ const {
   getAllComments,
   createComment,
   deleteComment,
+  updateComment,
+  getCommentReplies,
 } = require("../controllers/commentController");
 const validateToken = require("../middleware/validateToken");
-const { updateCampaign } = require("../controllers/campaignController");
 
 const router = express.Router();
 
-router.route("/").get(getAllComments).post(validateToken, createComment);
-
 router
-  .route("/:id")
-  .delete(validateToken, deleteComment)
-  .put(validateToken, updateCampaign);
+  .route("/:id/comments")
+  .get(getAllComments)
+  .post(validateToken, createComment)
+  .put(validateToken, updateComment)
+  .delete(validateToken, deleteComment);
+
+router.route("/:id/comments/:commentid", getCommentReplies)
 
 module.exports = router;

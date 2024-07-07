@@ -1,4 +1,4 @@
-const {constants} = require("../constants");
+const { constants } = require("../constants");
 
 const errorHandler = (err, req, res, next) => {
   const statusCode = res.statusCode ? res.statusCode : 500;
@@ -31,13 +31,6 @@ const errorHandler = (err, req, res, next) => {
         stackTrace: err.stack,
       });
       break;
-    case constants.UNAUTHORIZED:
-      res.json({
-        title: "Unauthorized",
-        message: err.message,
-        stackTrace: err.stack,
-      });
-      break;
     case constants.SERVER_ERROR:
       res.json({
         title: "Server Error",
@@ -46,7 +39,11 @@ const errorHandler = (err, req, res, next) => {
       });
       break;
     default:
-      console.log("Error, Something Went Wrong!");
+      res.status(500).json({
+        title: "Error, Something Went Wrong!",
+        message: err.message,
+        stackTrace: err.stack,
+      });
       break;
   }
 };

@@ -4,13 +4,7 @@ const cloudinary = require("../utils/cloudinary");
 
 //private
 const createCampaign = asyncHandler(async (req, res) => {
-  const result = await cloudinary.uploader.upload(req.file.path);
-  if (!result) {
-    res.status(400);
-    throw new Error("Failed to upload image.");
-  }
-
-  const { title, description, goalAmount, endDate, startDate } = req.body;
+  const { title, description, goalAmount, endDate, startDate, tags } = req.body;
   if (!title || !description || !goalAmount || !endDate) {
     res.status(400);
     throw new Error("All fields are required");
@@ -23,7 +17,7 @@ const createCampaign = asyncHandler(async (req, res) => {
     goalAmount,
     endDate,
     startDate,
-    image: result.secure_url,
+    tags,
   });
 
   res.status(201).json(campaign);
@@ -31,12 +25,17 @@ const createCampaign = asyncHandler(async (req, res) => {
 
 //public
 const getAllCampaigns = asyncHandler(async (req, res) => {
-  const { search, page = 1, limit = 10 } = req.query;
+  const { search, tags, page = 1, limit = 10 } = req.query;
 
   const queryObject = {};
 
   if (search) {
     queryObject.title = { $regex: search, $options: "i" };
+  }
+
+  if (tags) {
+    const tagsArray = tags.split(",");
+    queryObject.tags = { $in: tagsArray };
   }
 
   const skip = (Number(page) - 1) * Number(limit);
@@ -47,7 +46,7 @@ const getAllCampaigns = asyncHandler(async (req, res) => {
   const totalCampaigns = await Campaign.countDocuments(queryObject);
   const numOfpages = Math.ceil(totalCampaigns / Number(limit));
 
-  res.status(201).json({
+  res.status(200).json({
     campaign,
     totalCampaigns,
     numOfpages,
@@ -103,6 +102,7 @@ const deleteCampaign = asyncHandler(async (req, res) => {
   }
 
   await Campaign.deleteOne({ _id: req.params.id });
+  await cloudinary.uploader.destroy(campaign.image.public_id);
 
   res.status(201).json(campaign);
 });
@@ -114,3 +114,4 @@ module.exports = {
   updateCampaign,
   deleteCampaign,
 };
+

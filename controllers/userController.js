@@ -2,11 +2,13 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const verifyEmail = require("../utils/verifyEmail");
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, password, phone } = req.body;
+  const { username, email, password, phone, fullname } = req.body;
 
-  if (!username || !email || !password || !phone) {
+  if (!username || !email || !password || !phone || !fullname) {
     res.status(400);
     throw new Error("All fields are mandatory");
   }
@@ -18,13 +20,19 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("User already registered");
   }
 
+  const verificationToken = crypto.randomBytes(20).toString("hex");
+
+  verifyEmail(email, verificationToken);
+
   // Hash password
   const hashedpassword = await bcrypt.hash(password, 10);
   const user = await User.create({
+    fullname,
     username,
     email,
     password: hashedpassword,
     phone,
+    verificationToken,
   });
 
   if (user) {
@@ -43,14 +51,28 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findOne({ email });
+  if (!user) {
+    res.status(404);
+    throw new Error("user does not exist");
+  }
+
+  if (!user.verified) {
+    res.status(401);
+    throw new Error("email is not verified");
+  }
 
   if (user && (await bcrypt.compare(password, user.password))) {
     const accessToken = jwt.sign(
       {
-        user: { username: user.username, email: user.email, _id: user._id },
+        user: {
+          username: user.username,
+          email: user.email,
+          _id: user._id,
+          fullname: user.fullname,
+        },
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "50m" }
+      { expiresIn: "7d" }
     );
     res.status(200).json({ accessToken });
   } else {
@@ -63,4 +85,23 @@ const currentUser = asyncHandler(async (req, res) => {
   res.json(req.user);
 });
 
-module.exports = { registerUser, loginUser, currentUser };
+const emailVerification = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  const user = await User.findOne({ verificationToken: token });
+  if (!user) {
+    res.status(404);
+    throw new Error("Verification token is invalid.");
+  }
+  await User.findByIdAndUpdate(
+    user._id,
+    {
+      verified: true,
+      verificationToken: null,
+    },
+    { new: true }
+  );
+
+  res.status(200).json({ message: "Email verification successful" });
+});
+
+module.exports = { registerUser, loginUser, currentUser, emailVerification };

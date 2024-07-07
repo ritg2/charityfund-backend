@@ -13,6 +13,15 @@ const donationSchema = mongoose.Schema(
       ref: "Campaign",
       required: true,
     },
+    reference: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    status: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

@@ -8,9 +8,15 @@ const campaignSchema = mongoose.Schema(
       ref: "User",
     },
     image: {
-      type: String,
-      default:
-        "https://res.cloudinary.com/dzr31apfk/image/upload/v1717608010/zqef8awx7nkoz4qzto19.jpg",
+      public_id: {
+        type: String,
+        default: "zqef8awx7nkoz4qzto19",
+      },
+      url: {
+        type: String,
+        default:
+          "https://res.cloudinary.com/dzr31apfk/image/upload/v1717608010/zqef8awx7nkoz4qzto19.jpg",
+      },
     },
     title: {
       type: String,
@@ -28,6 +34,7 @@ const campaignSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    tags: [String],
     startDate: { type: Date, default: Date.now },
     endDate: { type: Date, required: true },
   },
