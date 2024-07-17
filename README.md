@@ -75,6 +75,4 @@ npm run dev
 
 ## License
 
-Specify the license under which your project is distributed. For example:
-
 This project is licensed under the MIT License - see the LICENSE file for details.
