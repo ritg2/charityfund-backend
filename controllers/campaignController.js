@@ -25,7 +25,7 @@ const createCampaign = asyncHandler(async (req, res) => {
 
 //public
 const getAllCampaigns = asyncHandler(async (req, res) => {
-  const { search, tags, page = 1, limit = 10 } = req.query;
+  const { user, search, tags, page = 1, limit = 10 } = req.query;
 
   const queryObject = {};
 
@@ -36,6 +36,10 @@ const getAllCampaigns = asyncHandler(async (req, res) => {
   if (tags) {
     const tagsArray = tags.split(",");
     queryObject.tags = { $in: tagsArray };
+  }
+
+  if(user) {
+    queryObject.user_id = user
   }
 
   const skip = (Number(page) - 1) * Number(limit);

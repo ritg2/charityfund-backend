@@ -8,11 +8,16 @@ const createComment = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("No comment");
   }
-  const comment = await Comment.create({
+  let comment = await Comment.create({
     content,
     user_id: req.user._id,
     campaign_id: req.params.id,
     parentComment,
+  });
+
+  comment = await comment.populate({
+    path: "user_id",
+    select: "username profile_picture",
   });
 
   res.status(201).json(comment);

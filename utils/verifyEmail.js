@@ -14,7 +14,7 @@ const verifyEmail = (email, verificationToken) => {
     from: "ritking2@gmail.com",
     to: email,
     subject: "Account Verification",
-    html: `<p>Please click <a href="http://localhost:5001/api/user/verify/${verificationToken}">here</a> to verify your email address.</p>`,
+    html: `<p>Please click <a href="http://localhost:5001/api/V1/user/verify/${verificationToken}">here</a> to verify your email address.</p>`,
   };
 
   transporter.sendMail(mailOptions, function (error, info) {

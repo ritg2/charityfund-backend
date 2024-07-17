@@ -19,11 +19,11 @@ app.use(
     },
   })
 );
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+// });
+// app.use(limiter);
 
 app.use(
   cors({
@@ -33,10 +33,10 @@ app.use(
 );
 
 app.use(express.json());
-app.use("/api/user", require("./routes/userRoutes"));
-app.use("/api/campaign", require("./routes/campaignRoutes"));
-app.use("/api/comment", require("./routes/commentRoutes"));
-app.use("/api/donation", require("./routes/donationRoutes"));
+app.use("/api/v1/user", require("./routes/userRoutes"));
+app.use("/api/v1/campaign", require("./routes/campaignRoutes"));
+app.use("/api/v1/comment", require("./routes/commentRoutes"));
+app.use("/api/v1/donation", require("./routes/donationRoutes"));
 app.use(errorHandler);
 
 const port = process.env.PORT || 5000;
