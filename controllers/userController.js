@@ -101,7 +101,7 @@ const emailVerification = asyncHandler(async (req, res) => {
     { new: true }
   );
 
-  res.status(200).json({ message: "Email verification successful" });
+  res.status(200).redirect(`${process.env.FRONTEND_BASE_URI}/login`);
 });
 
 module.exports = { registerUser, loginUser, currentUser, emailVerification };

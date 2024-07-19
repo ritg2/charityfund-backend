@@ -19,15 +19,15 @@ app.use(
     },
   })
 );
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 100,
-// });
-// app.use(limiter);
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 500,
+});
+app.use(limiter);
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_BASE_URI,
     optionsSuccessStatus: 200,
   })
 );

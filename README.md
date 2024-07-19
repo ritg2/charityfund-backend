@@ -53,6 +53,7 @@ CLOUDINARY_API_KEY=api-key
 CLOUDINARY_API_SECRET=api-secret
 PAYSTACK_SECRET_KEY=paystack secret key
 GMAIL_PASSWORD=gmail-password
+NODE_ENV=production
 ```
 
 ## Running the Application
