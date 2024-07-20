@@ -74,11 +74,21 @@ const loginUser = asyncHandler(async (req, res) => {
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "7d" }
     );
-    res.status(200).json({ accessToken });
+    res.cookie("token", accessToken, {
+      httpOnly: true,
+      // secure: true,
+      sameSite: "strict",
+    });
+    res.status(200).json({ message: "Logged in successfully" });
   } else {
     res.status(401);
     throw new Error("email or password is not valid");
   }
+});
+
+const logoutUser = asyncHandler(async (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Logged out successfully" });
 });
 
 const currentUser = asyncHandler(async (req, res) => {
@@ -104,4 +114,10 @@ const emailVerification = asyncHandler(async (req, res) => {
   res.status(200).redirect(`${process.env.FRONTEND_BASE_URI}/login`);
 });
 
-module.exports = { registerUser, loginUser, currentUser, emailVerification };
+module.exports = {
+  registerUser,
+  loginUser,
+  logoutUser,
+  currentUser,
+  emailVerification,
+};
