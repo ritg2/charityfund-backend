@@ -76,7 +76,7 @@ const loginUser = asyncHandler(async (req, res) => {
     );
     res.cookie("token", accessToken, {
       httpOnly: true,
-      // secure: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
     res.status(200).json({ message: "Logged in successfully" });
