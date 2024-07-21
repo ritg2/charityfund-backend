@@ -7,16 +7,20 @@ const validateToken = asyncHandler(async (req, res, next) => {
   // if (authHeader && authHeader.startsWith("Bearer")) {
   //   token = authHeader.split(" ")[1];
   const token = req.cookies.token;
+  console.log("Token:", token);
   if (!token) {
+    console.log("No token found");
     res.status(401);
     throw new Error("User is not authorized");
   }
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
+      console.log("Token verification failed:", err);
       res.status(401);
       throw new Error("User is not authorized");
     }
+    console.log("Token decoded:", decoded);
     req.user = decoded.user;
     next();
   });
