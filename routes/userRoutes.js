@@ -5,6 +5,7 @@ const {
   currentUser,
   emailVerification,
   logoutUser,
+  getUserData,
 } = require("../controllers/userController");
 const validateToken = require("../middleware/validateToken");
 const upload = require("../middleware/multer");
@@ -15,6 +16,8 @@ const {
 } = require("../controllers/profileController");
 
 const router = express.Router();
+
+router.get("/:id", getUserData);
 
 router.post("/register", registerUser);
 

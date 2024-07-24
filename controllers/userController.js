@@ -4,6 +4,8 @@ const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const verifyEmail = require("../utils/verifyEmail");
+const mongoose = require("mongoose");
+const { lookup } = require("dns");
 
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password, phone, fullname } = req.body;
@@ -72,13 +74,21 @@ const loginUser = asyncHandler(async (req, res) => {
         },
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "1d" }
     );
     res.cookie("token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "None",
+      sameSite: "Strict",
     });
+    req.session.user = {
+      user: {
+        username: user.username,
+        email: user.email,
+        _id: user._id,
+        fullname: user.fullname,
+      },
+    };
     res.status(200).json({ message: "Logged in successfully" });
   } else {
     res.status(401);
@@ -87,12 +97,23 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      res.status(500);
+      throw new Error("Logout failed");
+    }
+  });
   res.clearCookie("token");
   res.status(200).json({ message: "Logged out successfully" });
 });
 
 const currentUser = asyncHandler(async (req, res) => {
-  res.json(req.user);
+  if (req.session.user) {
+    res.status(200).json(req.session.user);
+  } else {
+    res.status(401);
+    throw new Error("Not logged in");
+  }
 });
 
 const emailVerification = asyncHandler(async (req, res) => {
@@ -114,10 +135,52 @@ const emailVerification = asyncHandler(async (req, res) => {
   res.status(200).redirect(`${process.env.FRONTEND_BASE_URI}/login`);
 });
 
+const getUserData = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid user ID" });
+  }
+
+  // const user = await User.findById(id).select("fullname username email phone");
+
+  const user = await User.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(id) } },
+    {
+      $lookup: {
+        from: "campaigns",
+        localField: "_id",
+        foreignField: "user_id",
+        as: "campaigns",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        fullname: 1,
+        username: 1,
+        email: 1,
+        phone: 1,
+        profile_picture: 1,
+        createdAt: 1,
+        noOfCampaigns: { $size: "$campaigns" },
+      },
+    },
+  ]);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  res.status(200).json(user);
+});
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   currentUser,
   emailVerification,
+  getUserData,
 };

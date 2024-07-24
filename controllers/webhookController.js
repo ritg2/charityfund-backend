@@ -6,15 +6,19 @@ const Donation = require("../models/donationModel");
 
 const verifyDonation = asyncHandler(async (req, res) => {
   const hash = crypto
-    .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)
-    .update(req.body)
+    .createHmac("sha512", secret)
+    .update(JSON.stringify(req.body))
     .digest("hex");
 
   if (hash !== req.headers["x-paystack-signature"]) {
     res.status(400);
     throw new Error("Invalid signature");
   }
+
+  res.status(200);
+
   const event = JSON.parse(req.body);
+  console.log(event);
 
   if (event.event === "charge.success") {
     const reference = event.data.reference;
@@ -43,8 +47,6 @@ const verifyDonation = asyncHandler(async (req, res) => {
       res.status(404);
       throw new Error("Campaign not found!");
     }
-
-    res.status(200).json({ status: "Success", data: donation });
   } else {
     res.status(400);
     throw new Error("Event not handled");
