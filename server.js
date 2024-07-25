@@ -53,7 +53,7 @@ app.use(
     cookie: {
       httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
       secure: process.env.NODE_ENV === "production", // Set to true in production
-      sameSite: "Strict", // Adjust based on cross-site request needs
+      sameSite: "None", // Adjust based on cross-site request needs
       maxAge: 1000 * 60 * 60 * 24, // Cookie expiration (1 day)
     },
   })

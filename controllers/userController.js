@@ -79,7 +79,7 @@ const loginUser = asyncHandler(async (req, res) => {
     res.cookie("token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      sameSite: "None",
     });
     req.session.user = {
       user: {
