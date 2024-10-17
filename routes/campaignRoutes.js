@@ -6,6 +6,8 @@ const {
   updateCampaign,
   deleteCampaign,
   getCampaign,
+  saveCampaign,
+  unsaveCampaign,
 } = require("../controllers/campaignController");
 
 const {
@@ -26,6 +28,9 @@ router
   .get(getCampaign)
   .put(validateToken, updateCampaign)
   .delete(validateToken, deleteCampaign);
+
+router.route("/:id/save").post(validateToken, saveCampaign);
+router.route("/:id/unsave").post(validateToken, unsaveCampaign);
 
 router
   .route("/:id/image")

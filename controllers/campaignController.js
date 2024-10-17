@@ -1,17 +1,32 @@
 const asyncHandler = require("express-async-handler");
 const Campaign = require("../models/campaignModel");
 const cloudinary = require("../utils/cloudinary");
+const Organization = require("../models/organizationModel");
+const User = require("../models/userModel");
 
 //private
 const createCampaign = asyncHandler(async (req, res) => {
   const { title, description, goalAmount, endDate, startDate, tags } = req.body;
+  if (req.user.role !== "ngo") {
+    res.status(400);
+    throw new Error("user is not an NGO");
+  }
   if (!title || !description || !goalAmount || !endDate) {
     res.status(400);
     throw new Error("All fields are required");
   }
 
+  const organizationId = await Organization.findOne({
+    userId: req.user._id,
+  }).select("_id");
+
+  if (!organizationId) {
+    res.status(404);
+    throw new Error("NGO does not exist");
+  }
+
   const campaign = await Campaign.create({
-    user_id: req.user._id,
+    organization_id: organizationId,
     title,
     description,
     goalAmount,
@@ -19,6 +34,12 @@ const createCampaign = asyncHandler(async (req, res) => {
     startDate,
     tags,
   });
+
+  await Organization.findByIdAndUpdate(
+    organizationId,
+    { $addToSet: { campaigns: campaign._id } },
+    { new: true }
+  );
 
   res.status(201).json(campaign);
 });
@@ -38,8 +59,8 @@ const getAllCampaigns = asyncHandler(async (req, res) => {
     queryObject.tags = { $in: tagsArray };
   }
 
-  if(user) {
-    queryObject.user_id = user
+  if (user) {
+    queryObject.user_id = user;
   }
 
   const skip = (Number(page) - 1) * Number(limit);
@@ -77,9 +98,15 @@ const updateCampaign = asyncHandler(async (req, res) => {
     throw new Error("campaign not found");
   }
 
-  if (campaign.user_id.toString() !== req.user._id) {
+  const organizationId = await Organization.findOne({
+    userId: req.user.id,
+  }).select("_id");
+
+  if (campaign.organization_id.toString() !== organizationId.toString()) {
     res.status(401);
-    throw new Error("User don't have permission to update other user Campaign");
+    throw new Error(
+      "User don't have permission to update other organization Campaign"
+    );
   }
 
   const updatedCampaign = await Campaign.findByIdAndUpdate(
@@ -95,18 +122,55 @@ const updateCampaign = asyncHandler(async (req, res) => {
 const deleteCampaign = asyncHandler(async (req, res) => {
   const campaign = await Campaign.findById(req.params.id);
   if (!campaign) {
-    console.log(campaign.user_id.toString() !== req.user._id);
     res.status(404);
     throw new Error("campaign not found");
   }
 
-  if (campaign.user_id.toString() !== req.user._id) {
+  const organizationId = await Organization.findOne({
+    userId: req.user.id,
+  }).select("_id");
+
+  if (campaign.organization_id.toString() !== organizationId.toString()) {
     res.status(401);
-    throw new Error("User don't have permission to update other user Campaign");
+    throw new Error(
+      "User don't have permission to delete other organization Campaign"
+    );
   }
 
   await Campaign.deleteOne({ _id: req.params.id });
   await cloudinary.uploader.destroy(campaign.image.public_id);
+
+  res.status(201).json(campaign);
+});
+
+const saveCampaign = asyncHandler(async (req, res) => {
+  const campaign = await Campaign.findById(req.params.id);
+  if (!campaign) {
+    res.status(404);
+    throw new Error("campaign not found");
+  }
+
+  await User.findByIdAndUpdate(
+    req.user._id,
+    { $addToSet: { savedCampaigns: campaign._id } },
+    { new: true }
+  );
+
+  res.status(201).json(campaign);
+});
+
+const unsaveCampaign = asyncHandler(async (req, res) => {
+  const campaign = await Campaign.findById(req.params.id);
+  if (!campaign) {
+    res.status(404);
+    throw new Error("campaign not found");
+  }
+
+  await User.findByIdAndUpdate(
+    req.user._id,
+    { $pull: { savedCampaigns: campaign._id } },
+    { new: true }
+  );
 
   res.status(201).json(campaign);
 });
@@ -117,5 +181,6 @@ module.exports = {
   getCampaign,
   updateCampaign,
   deleteCampaign,
+  saveCampaign,
+  unsaveCampaign,
 };
-

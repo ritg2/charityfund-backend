@@ -53,7 +53,7 @@ app.use(
     cookie: {
       httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
       secure: process.env.NODE_ENV === "production", // Set to true in production
-      sameSite: "None", // Adjust based on cross-site request needs
+      sameSite: "Strict", // Adjust based on cross-site request needs
       maxAge: 1000 * 60 * 60 * 24, // Cookie expiration (1 day)
     },
   })
@@ -64,6 +64,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/user", require("./routes/userRoutes"));
+app.use("/api/v1/organization", require("./routes/organizationRoutes"));
 app.use("/api/v1/campaign", require("./routes/campaignRoutes"));
 app.use("/api/v1/comment", require("./routes/commentRoutes"));
 app.use("/api/v1/donation", require("./routes/donationRoutes"));

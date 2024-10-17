@@ -17,7 +17,7 @@ const {
 
 const router = express.Router();
 
-router.get("/:id", getUserData);
+router.get("/current", validateToken, currentUser);
 
 router.post("/register", registerUser);
 
@@ -25,13 +25,13 @@ router.post("/login", loginUser);
 
 router.post("/logout", logoutUser);
 
-router.get("/current", validateToken, currentUser);
-
 router.get("/verify/:token", emailVerification);
 
+router.get("/profile/:id", getUserData);
+
 router
-  .route("/:id/profile-picture")
-  .post(validateToken, upload.single("image"), uploadProfilePicture)
+  .route("/profile-picture/:id")
+  .post(upload.single("image"), uploadProfilePicture)
   .put(validateToken, upload.single("image"), updateProfilePicture)
   .delete(validateToken, upload.single("image"), deleteProfilePicture);
 

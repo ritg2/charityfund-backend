@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv").config();
 
-const verifyEmail = (email, verificationToken) => {
+const sendEmail = (email, subject, html) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -10,16 +10,11 @@ const verifyEmail = (email, verificationToken) => {
     },
   });
 
-  const url =
-    process.env.NODE_ENV === "production"
-      ? "https://ritg2-crownfund-backend-node.onrender.com"
-      : "http://localhost:5001";
-
   const mailOptions = {
     from: "ritking2@gmail.com",
     to: email,
-    subject: "Account Verification",
-    html: `<p>Please click <a href="${url}/api/V1/user/verify/${verificationToken}">here</a> to verify your email address.</p>`,
+    subject: subject,
+    html: html,
   };
 
   transporter.sendMail(mailOptions, function (error, info) {
@@ -32,4 +27,4 @@ const verifyEmail = (email, verificationToken) => {
   });
 };
 
-module.exports = verifyEmail;
+module.exports = sendEmail;

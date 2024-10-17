@@ -22,6 +22,13 @@ const donationSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    anonymous: {
+      type: Boolean,
+      default: false,
+    },
+    message: {
+      type: String,
+    },
   },
   {
     timestamps: true,

@@ -3,14 +3,13 @@ const bcrypt = require("bcrypt");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const verifyEmail = require("../utils/verifyEmail");
+const sendEmail = require("../utils/sendEmail");
 const mongoose = require("mongoose");
-const { lookup } = require("dns");
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, password, phone, fullname } = req.body;
+  const { username, email, password, phone, fullname, role } = req.body;
 
-  if (!username || !email || !password || !phone || !fullname) {
+  if (!username || !email || !password || !phone || !fullname || !role) {
     res.status(400);
     throw new Error("All fields are mandatory");
   }
@@ -24,7 +23,13 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const verificationToken = crypto.randomBytes(20).toString("hex");
 
-  verifyEmail(email, verificationToken);
+  const url = process.env.NODE_ENV_URL;
+
+  const html = `<p>Please click <a href="${url}/api/V1/user/verify/${verificationToken}">here</a> to verify your email address.</p>`;
+
+  const subject = "Account Verification";
+
+  sendEmail(email, subject, html);
 
   // Hash password
   const hashedpassword = await bcrypt.hash(password, 10);
@@ -33,12 +38,13 @@ const registerUser = asyncHandler(async (req, res) => {
     username,
     email,
     password: hashedpassword,
+    role,
     phone,
     verificationToken,
   });
 
   if (user) {
-    res.status(201).json({ _id: user._id, email: user.email });
+    res.status(201).json({ _id: user._id, email: user.email, role: user.role });
   } else {
     res.status(400);
     throw new Error("Invalid user data");
@@ -67,9 +73,9 @@ const loginUser = asyncHandler(async (req, res) => {
     const accessToken = jwt.sign(
       {
         user: {
-          username: user.username,
-          email: user.email,
           _id: user._id,
+          role: user.role,
+          email: user.email,
           fullname: user.fullname,
         },
       },
@@ -79,17 +85,24 @@ const loginUser = asyncHandler(async (req, res) => {
     res.cookie("token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "None",
+      sameSite: "Strict",
     });
     req.session.user = {
       user: {
-        username: user.username,
-        email: user.email,
         _id: user._id,
+        role: user.role,
+        email: user.email,
         fullname: user.fullname,
       },
     };
-    res.status(200).json({ message: "Logged in successfully" });
+    res.status(200).json({
+      user: {
+        _id: user._id,
+        role: user.role,
+        email: user.email,
+        fullname: user.fullname,
+      },
+    });
   } else {
     res.status(401);
     throw new Error("email or password is not valid");
@@ -142,31 +155,10 @@ const getUserData = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Invalid user ID" });
   }
 
-  // const user = await User.findById(id).select("fullname username email phone");
-
-  const user = await User.aggregate([
-    { $match: { _id: new mongoose.Types.ObjectId(id) } },
-    {
-      $lookup: {
-        from: "campaigns",
-        localField: "_id",
-        foreignField: "user_id",
-        as: "campaigns",
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        fullname: 1,
-        username: 1,
-        email: 1,
-        phone: 1,
-        profile_picture: 1,
-        createdAt: 1,
-        noOfCampaigns: { $size: "$campaigns" },
-      },
-    },
-  ]);
+  const user = await User.findById(id)
+    .select("-password -verificationToken") // Exclude these fields
+    .populate("donationHistory") // Populate donationHistory field
+    .populate("savedCampaigns"); // Populate savedCampaigns field
 
   if (!user) {
     res.status(404);

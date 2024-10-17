@@ -9,12 +9,12 @@ const uploadProfilePicture = asyncHandler(async (req, res) => {
     throw new Error("user not found");
   }
 
-  if (user._id.toString() !== req.user._id) {
-    res.status(401);
-    throw new Error(
-      "User don't have permission to update other user profile picture"
-    );
-  }
+  // if (user._id.toString() !== req.user._id) {
+  //   res.status(401);
+  //   throw new Error(
+  //     "User don't have permission to update other user profile picture"
+  //   );
+  // }
 
   const result = await cloudinary.uploader.upload(req.file.path);
   if (!result) {

@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 
 const campaignSchema = mongoose.Schema(
   {
-    user_id: {
+    organization_id: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
       required: true,
-      ref: "User",
     },
     image: {
       public_id: {
@@ -37,6 +37,17 @@ const campaignSchema = mongoose.Schema(
     tags: [String],
     startDate: { type: Date, default: Date.now },
     endDate: { type: Date, required: true },
+    status: {
+      type: String,
+      enum: ["active", "completed", "expired"],
+      default: "active",
+    },
+    donations: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Donation",
+      },
+    ],
   },
   {
     timestamps: true,

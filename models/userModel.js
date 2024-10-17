@@ -10,6 +10,11 @@ const userSchema = mongoose.Schema(
       unique: true,
     },
     password: { type: String, required: [true, "password is required"] },
+    role: {
+      type: String,
+      enum: ["donor", "ngo", "admin"],
+      required: true,
+    },
     phone: {
       type: String,
       required: [true, "Please add phone number"],
@@ -27,6 +32,10 @@ const userSchema = mongoose.Schema(
           "https://res.cloudinary.com/dzr31apfk/image/upload/PngItem_307416_yy94m5.png",
       },
     },
+    donationHistory: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Donation" },
+    ],
+    savedCampaigns: [{ type: mongoose.Schema.Types.ObjectId, ref: "Campaign" }],
   },
   {
     timestamps: true,
